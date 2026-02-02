@@ -1,158 +1,149 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Descargar Aerolínea Tycoon</title>
-<style>
-body{
-    font-family:Arial, sans-serif;
-    text-align:center;
-    padding:40px;
-    background:#f0f8ff;
-}
-button{
-    font-size:18px;
-    padding:15px 25px;
-    border:none;
-    border-radius:8px;
-    background:#007BFF;
-    color:white;
-    cursor:pointer;
-}
-button:hover{background:#0056b3;}
-</style>
-</head>
-<body>
-
-<h1>✈️ Aerolínea Tycoon</h1>
-<p>Haz clic para descargar el archivo <b>index.html</b> listo para ejecutar</p>
-
-<button onclick="descargar()">⬇️ Descargar index.html</button>
-
-<script>
-function descargar(){
-const contenido = `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Aerolínea Tycoon</title>
+<title>Airline Tycoon</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{font-family:Arial;background:linear-gradient(#87CEEB,#f0f8ff);margin:0;text-align:center;}
+body{
+  font-family: Arial, sans-serif;
+  background: linear-gradient(#87CEEB,#f0f8ff);
+  margin:0;
+  text-align:center;
+}
 h1{color:#003366;}
-.panel{background:#fff;margin:10px auto;padding:10px;max-width:420px;border-radius:10px;box-shadow:0 0 8px rgba(0,0,0,.2);}
-canvas{border:2px solid #003366;border-radius:10px;background:#cceeff;max-width:95%;}
-button{padding:8px;margin:5px;border:none;border-radius:5px;background:#007BFF;color:#fff;}
+.panel{
+  background:#fff;
+  margin:10px auto;
+  padding:10px;
+  max-width:420px;
+  border-radius:10px;
+  box-shadow:0 0 8px rgba(0,0,0,.2);
+}
+canvas{
+  border:2px solid #003366;
+  border-radius:10px;
+  background:#cceeff;
+  max-width:95%;
+}
+button{
+  padding:8px;
+  margin:5px;
+  border:none;
+  border-radius:5px;
+  background:#007BFF;
+  color:white;
+  cursor:pointer;
+}
 button:hover{background:#0056b3;}
 .small{font-size:.9em;color:#444;}
 </style>
 </head>
 <body>
 
-<h1>✈️ Aerolínea Tycoon</h1>
+<h1>✈️ Airline Tycoon</h1>
 
 <div class="panel">
-<p>💰 Dinero: $<span id="dinero"></span></p>
-<p>✈️ Aviones: <span id="aviones"></span></p>
-<p>👨‍✈️ Pilotos: <span id="pilotos"></span></p>
-<p>😊 Satisfacción: <span id="satisfaccion"></span>%</p>
+  <p>💰 Money: $<span id="money"></span></p>
+  <p>✈️ Planes: <span id="planes"></span></p>
+  <p>👨‍✈️ Pilots: <span id="pilots"></span></p>
+  <p>😊 Customer Satisfaction: <span id="satisfaction"></span>%</p>
 </div>
 
-<canvas id="mapa" width="360" height="220"></canvas>
+<canvas id="map" width="360" height="220"></canvas>
 
 <div class="panel">
-<p>🛫 Ruta: <span id="rutaTxt">Selecciona dos ciudades</span></p>
-<button onclick="volar()">Volar</button>
-<button onclick="comprarAvion()">Comprar avión ($500)</button>
-<button onclick="contratarPiloto()">Contratar piloto ($300)</button><br>
-<button onclick="guardar()">💾 Guardar</button>
-<button onclick="cargar()">📂 Cargar</button>
+  <p>🛫 Route: <span id="routeTxt">Select two cities</span></p>
+  <button onclick="fly()">Fly</button>
+  <button onclick="buyPlane()">Buy Plane ($500)</button>
+  <button onclick="hirePilot()">Hire Pilot ($300)</button><br>
+  <button onclick="saveGame()">💾 Save</button>
+  <button onclick="loadGame()">📂 Load</button>
 </div>
 
 <p id="log" class="small"></p>
 
 <script>
-let dinero=2000,aviones=1,pilotos=1,satisfaccion=80;
-const canvas=document.getElementById("mapa");
-const ctx=canvas.getContext("2d");
-const ciudades=[
- {n:"México",x:80,y:110},
- {n:"Nueva York",x:120,y:70},
- {n:"Madrid",x:200,y:80},
- {n:"São Paulo",x:150,y:160},
- {n:"Tokio",x:300,y:90}
-];
-let origen=null,destino=null;
+let money = 2000, planes = 1, pilots = 1, satisfaction = 80;
 
-function dibujar(){
- ctx.clearRect(0,0,canvas.width,canvas.height);
- ciudades.forEach(c=>{
-  ctx.beginPath();
-  ctx.arc(c.x,c.y,6,0,Math.PI*2);
-  ctx.fillStyle=(c===origen)?"green":(c===destino)?"red":"#003366";
-  ctx.fill();
-  ctx.fillText(c.n,c.x+8,c.y+4);
- });
- if(origen&&destino){
-  ctx.beginPath();
-  ctx.moveTo(origen.x,origen.y);
-  ctx.lineTo(destino.x,destino.y);
-  ctx.strokeStyle="orange";
-  ctx.lineWidth=2;
-  ctx.stroke();
- }
+const canvas = document.getElementById("map");
+const ctx = canvas.getContext("2d");
+
+const cities = [
+  {name:"Mexico City", x:80, y:110},
+  {name:"New York", x:120, y:70},
+  {name:"Madrid", x:200, y:80},
+  {name:"Sao Paulo", x:150, y:160},
+  {name:"Tokyo", x:300, y:90}
+];
+
+let origin = null, destination = null;
+
+function drawMap() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  cities.forEach(c=>{
+    ctx.beginPath();
+    ctx.arc(c.x,c.y,6,0,Math.PI*2);
+    ctx.fillStyle = (c===origin)?"green":(c===destination)?"red":"#003366";
+    ctx.fill();
+    ctx.fillText(c.name, c.x+8, c.y+4);
+  });
+  if(origin && destination){
+    ctx.beginPath();
+    ctx.moveTo(origin.x, origin.y);
+    ctx.lineTo(destination.x, destination.y);
+    ctx.strokeStyle="orange";
+    ctx.lineWidth=2;
+    ctx.stroke();
+  }
 }
 
-canvas.addEventListener("click",e=>{
- const r=canvas.getBoundingClientRect();
- const x=e.clientX-r.left,y=e.clientY-r.top;
- ciudades.forEach(c=>{
-  if(Math.hypot(c.x-x,c.y-y)<8){
-   if(!origen)origen=c;
-   else if(!destino&&c!==origen)destino=c;
-   else{origen=c;destino=null;}
-  }
- });
- rutaTxt.textContent=origen&&destino?\`\${origen.n} → \${destino.n}\`:"Selecciona dos ciudades";
- dibujar();
+canvas.addEventListener("click", e=>{
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  cities.forEach(c=>{
+    if(Math.hypot(c.x-x,c.y-y)<8){
+      if(!origin) origin=c;
+      else if(!destination && c!==origin) destination=c;
+      else { origin=c; destination=null; }
+    }
+  });
+  updateRoute();
+  drawMap();
 });
 
-function volar(){
- if(!origen||!destino)return log("❌ Selecciona dos ciudades");
- let g=Math.floor(Math.hypot(origen.x-destino.x,origen.y-destino.y)*5*(satisfaccion/100));
- dinero+=g;satisfaccion-=2;
- log(\`🛫 \${origen.n} → \${destino.n} +$\${g}\`);
- actualizar();
+function distance(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+
+function fly(){
+  if(!origin || !destination){ log("❌ Select two cities"); return; }
+  if(planes<=0 || pilots<=0){ log("❌ Not enough planes or pilots"); return; }
+  let dist = distance(origin,destination);
+  let profit = Math.floor(dist*5*(satisfaction/100));
+  if(Math.random()<0.2){ profit*=0.7; satisfaction-=5; log("🌩️ Bad weather!"); }
+  money += Math.floor(profit);
+  satisfaction -= 2;
+  log(`🛫 Flight ${origin.name} → ${destination.name} +$${Math.floor(profit)}`);
+  updateStats();
 }
 
-function comprarAvion(){if(dinero>=500){dinero-=500;aviones++;log("✈️ Avión comprado");}actualizar();}
-function contratarPiloto(){if(dinero>=300){dinero-=300;pilotos++;log("👨‍✈️ Piloto contratado");}actualizar();}
-function guardar(){localStorage.setItem("aero",JSON.stringify({dinero,aviones,pilotos,satisfaccion}));log("💾 Guardado");}
-function cargar(){let d=JSON.parse(localStorage.getItem("aero"));if(d){dinero=d.dinero;aviones=d.aviones;pilotos=d.pilotos;satisfaccion=d.satisfaccion;}actualizar();}
-function actualizar(){dineroSpan.textContent=dinero;avionesSpan.textContent=aviones;pilotosSpan.textContent=pilotos;satisfaccionSpan.textContent=Math.floor(satisfaccion);}
-function log(t){logP.textContent=t;}
+function buyPlane(){ if(money>=500){ money-=500; planes++; log("✈️ Plane purchased"); } else log("❌ Not enough money"); updateStats(); }
+function hirePilot(){ if(money>=300){ money-=300; pilots++; log("👨‍✈️ Pilot hired"); } else log("❌ Not enough money"); updateStats(); }
+function updateRoute(){ routeTxt.textContent = origin && destination ? `${origin.name} → ${destination.name}` : "Select two cities"; }
+function updateStats(){ moneySpan.textContent=money; planesSpan.textContent=planes; pilotsSpan.textContent=pilots; satisfactionSpan.textContent=Math.floor(satisfaction); }
+function log(msg){ logP.textContent = msg; }
+function saveGame(){ localStorage.setItem("airlineGame", JSON.stringify({money,planes,pilots,satisfaction})); log("💾 Game saved"); }
+function loadGame(){ let d = JSON.parse(localStorage.getItem("airlineGame")); if(d){ money=d.money; planes=d.planes; pilots=d.pilots; satisfaction=d.satisfaction; } updateStats(); }
 
-const dineroSpan=document.getElementById("dinero");
-const avionesSpan=document.getElementById("aviones");
-const pilotosSpan=document.getElementById("pilotos");
-const satisfaccionSpan=document.getElementById("satisfaccion");
-const rutaTxt=document.getElementById("rutaTxt");
-const logP=document.getElementById("log");
+const moneySpan = document.getElementById("money");
+const planesSpan = document.getElementById("planes");
+const pilotsSpan = document.getElementById("pilots");
+const satisfactionSpan = document.getElementById("satisfaction");
+const routeTxt = document.getElementById("routeTxt");
+const logP = document.getElementById("log");
 
-dibujar();actualizar();
-</script>
-
-</body>
-</html>`;
-
-const blob = new Blob([contenido], { type: "text/html" });
-const url = URL.createObjectURL(blob);
-const a = document.createElement("a");
-a.href = url;
-a.download = "index.html";
-a.click();
-URL.revokeObjectURL(url);
-}
+drawMap();
+updateStats();
 </script>
 
 </body>
