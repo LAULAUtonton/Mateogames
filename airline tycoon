@@ -1,1 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Descargar Aerolínea Tycoon</title>
+<style>
+body{
+    font-family:Arial, sans-serif;
+    text-align:center;
+    padding:40px;
+    background:#f0f8ff;
+}
+button{
+    font-size:18px;
+    padding:15px 25px;
+    border:none;
+    border-radius:8px;
+    background:#007BFF;
+    color:white;
+    cursor:pointer;
+}
+button:hover{background:#0056b3;}
+</style>
+</head>
+<body>
+
+<h1>✈️ Aerolínea Tycoon</h1>
+<p>Haz clic para descargar el archivo <b>index.html</b> listo para ejecutar</p>
+
+<button onclick="descargar()">⬇️ Descargar index.html</button>
+
+<script>
+function descargar(){
+const contenido = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Aerolínea Tycoon</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{font-family:Arial;background:linear-gradient(#87CEEB,#f0f8ff);margin:0;text-align:center;}
+h1{color:#003366;}
+.panel{background:#fff;margin:10px auto;padding:10px;max-width:420px;border-radius:10px;box-shadow:0 0 8px rgba(0,0,0,.2);}
+canvas{border:2px solid #003366;border-radius:10px;background:#cceeff;max-width:95%;}
+button{padding:8px;margin:5px;border:none;border-radius:5px;background:#007BFF;color:#fff;}
+button:hover{background:#0056b3;}
+.small{font-size:.9em;color:#444;}
+</style>
+</head>
+<body>
+
+<h1>✈️ Aerolínea Tycoon</h1>
+
+<div class="panel">
+<p>💰 Dinero: $<span id="dinero"></span></p>
+<p>✈️ Aviones: <span id="aviones"></span></p>
+<p>👨‍✈️ Pilotos: <span id="pilotos"></span></p>
+<p>😊 Satisfacción: <span id="satisfaccion"></span>%</p>
+</div>
+
+<canvas id="mapa" width="360" height="220"></canvas>
+
+<div class="panel">
+<p>🛫 Ruta: <span id="rutaTxt">Selecciona dos ciudades</span></p>
+<button onclick="volar()">Volar</button>
+<button onclick="comprarAvion()">Comprar avión ($500)</button>
+<button onclick="contratarPiloto()">Contratar piloto ($300)</button><br>
+<button onclick="guardar()">💾 Guardar</button>
+<button onclick="cargar()">📂 Cargar</button>
+</div>
+
+<p id="log" class="small"></p>
+
+<script>
+let dinero=2000,aviones=1,pilotos=1,satisfaccion=80;
+const canvas=document.getElementById("mapa");
+const ctx=canvas.getContext("2d");
+const ciudades=[
+ {n:"México",x:80,y:110},
+ {n:"Nueva York",x:120,y:70},
+ {n:"Madrid",x:200,y:80},
+ {n:"São Paulo",x:150,y:160},
+ {n:"Tokio",x:300,y:90}
+];
+let origen=null,destino=null;
+
+function dibujar(){
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ ciudades.forEach(c=>{
+  ctx.beginPath();
+  ctx.arc(c.x,c.y,6,0,Math.PI*2);
+  ctx.fillStyle=(c===origen)?"green":(c===destino)?"red":"#003366";
+  ctx.fill();
+  ctx.fillText(c.n,c.x+8,c.y+4);
+ });
+ if(origen&&destino){
+  ctx.beginPath();
+  ctx.moveTo(origen.x,origen.y);
+  ctx.lineTo(destino.x,destino.y);
+  ctx.strokeStyle="orange";
+  ctx.lineWidth=2;
+  ctx.stroke();
+ }
+}
+
+canvas.addEventListener("click",e=>{
+ const r=canvas.getBoundingClientRect();
+ const x=e.clientX-r.left,y=e.clientY-r.top;
+ ciudades.forEach(c=>{
+  if(Math.hypot(c.x-x,c.y-y)<8){
+   if(!origen)origen=c;
+   else if(!destino&&c!==origen)destino=c;
+   else{origen=c;destino=null;}
+  }
+ });
+ rutaTxt.textContent=origen&&destino?\`\${origen.n} → \${destino.n}\`:"Selecciona dos ciudades";
+ dibujar();
+});
+
+function volar(){
+ if(!origen||!destino)return log("❌ Selecciona dos ciudades");
+ let g=Math.floor(Math.hypot(origen.x-destino.x,origen.y-destino.y)*5*(satisfaccion/100));
+ dinero+=g;satisfaccion-=2;
+ log(\`🛫 \${origen.n} → \${destino.n} +$\${g}\`);
+ actualizar();
+}
+
+function comprarAvion(){if(dinero>=500){dinero-=500;aviones++;log("✈️ Avión comprado");}actualizar();}
+function contratarPiloto(){if(dinero>=300){dinero-=300;pilotos++;log("👨‍✈️ Piloto contratado");}actualizar();}
+function guardar(){localStorage.setItem("aero",JSON.stringify({dinero,aviones,pilotos,satisfaccion}));log("💾 Guardado");}
+function cargar(){let d=JSON.parse(localStorage.getItem("aero"));if(d){dinero=d.dinero;aviones=d.aviones;pilotos=d.pilotos;satisfaccion=d.satisfaccion;}actualizar();}
+function actualizar(){dineroSpan.textContent=dinero;avionesSpan.textContent=aviones;pilotosSpan.textContent=pilotos;satisfaccionSpan.textContent=Math.floor(satisfaccion);}
+function log(t){logP.textContent=t;}
+
+const dineroSpan=document.getElementById("dinero");
+const avionesSpan=document.getElementById("aviones");
+const pilotosSpan=document.getElementById("pilotos");
+const satisfaccionSpan=document.getElementById("satisfaccion");
+const rutaTxt=document.getElementById("rutaTxt");
+const logP=document.getElementById("log");
+
+dibujar();actualizar();
+</script>
+
+</body>
+</html>`;
+
+const blob = new Blob([contenido], { type: "text/html" });
+const url = URL.createObjectURL(blob);
+const a = document.createElement("a");
+a.href = url;
+a.download = "index.html";
+a.click();
+URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
 
