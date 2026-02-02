@@ -2,39 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Descargar Aerolínea Tycoon</title>
-<style>
-body{
-    font-family:Arial, sans-serif;
-    text-align:center;
-    padding:40px;
-    background:#f0f8ff;
-}
-button{
-    font-size:18px;
-    padding:15px 25px;
-    border:none;
-    border-radius:8px;
-    background:#007BFF;
-    color:white;
-    cursor:pointer;
-}
-button:hover{background:#0056b3;}
-</style>
-</head>
-<body>
-
-<h1>✈️ Aerolínea Tycoon</h1>
-<p>Haz clic para descargar el archivo <b>index.html</b> listo para ejecutar</p>
-
-<button onclick="descargar()">⬇️ Descargar index.html</button>
-
-<script>
-function descargar(){
-const contenido = `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
 <title>Aerolínea Tycoon</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
@@ -113,7 +80,7 @@ canvas.addEventListener("click",e=>{
    else{origen=c;destino=null;}
   }
  });
- rutaTxt.textContent=origen&&destino?\`\${origen.n} → \${destino.n}\`:"Selecciona dos ciudades";
+ rutaTxt.textContent=origen&&destino?`${origen.n} → ${destino.n}`:"Selecciona dos ciudades";
  dibujar();
 });
 
@@ -121,7 +88,7 @@ function volar(){
  if(!origen||!destino)return log("❌ Selecciona dos ciudades");
  let g=Math.floor(Math.hypot(origen.x-destino.x,origen.y-destino.y)*5*(satisfaccion/100));
  dinero+=g;satisfaccion-=2;
- log(\`🛫 \${origen.n} → \${destino.n} +$\${g}\`);
+ log(`🛫 ${origen.n} → ${destino.n} +$${g}`);
  actualizar();
 }
 
@@ -140,19 +107,6 @@ const rutaTxt=document.getElementById("rutaTxt");
 const logP=document.getElementById("log");
 
 dibujar();actualizar();
-</script>
-
-</body>
-</html>`;
-
-const blob = new Blob([contenido], { type: "text/html" });
-const url = URL.createObjectURL(blob);
-const a = document.createElement("a");
-a.href = url;
-a.download = "index.html";
-a.click();
-URL.revokeObjectURL(url);
-}
 </script>
 
 </body>
