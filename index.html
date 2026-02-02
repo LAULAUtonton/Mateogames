@@ -2,16 +2,25 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Aerolínea Tycoon</title>
+<title>Aerolínea Tycoon Mejorado</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{font-family:Arial;background:linear-gradient(#87CEEB,#f0f8ff);margin:0;text-align:center;}
-h1{color:#003366;}
-.panel{background:#fff;margin:10px auto;padding:10px;max-width:420px;border-radius:10px;box-shadow:0 0 8px rgba(0,0,0,.2);}
+body{font-family:Arial, sans-serif;background:linear-gradient(#87CEEB,#f0f8ff);margin:0;text-align:center;}
+h1{color:#003366;margin-top:10px;}
+.panel{background:#fff;margin:10px auto;padding:10px;max-width:460px;border-radius:10px;box-shadow:0 0 8px rgba(0,0,0,.2);}
 canvas{border:2px solid #003366;border-radius:10px;background:#cceeff;max-width:95%;}
-button{padding:8px;margin:5px;border:none;border-radius:5px;background:#007BFF;color:#fff;}
+button{padding:8px 10px;margin:4px;border:none;border-radius:5px;background:#007BFF;color:#fff;cursor:pointer;font-size:0.9rem;}
 button:hover{background:#0056b3;}
-.small{font-size:.9em;color:#444;}
+.small{font-size:.9em;color:#444;min-height:1.2em;}
+.stats-row{display:flex;flex-wrap:wrap;justify-content:space-around;font-size:0.95rem;}
+.stats-row p{margin:4px 0;}
+#overlayGameOver{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  display:none;align-items:center;justify-content:center;z-index:10;
+}
+#overlayGameOver div{
+  background:#fff;padding:20px;border-radius:10px;max-width:320px;
+}
 </style>
 </head>
 <body>
@@ -19,37 +28,73 @@ button:hover{background:#0056b3;}
 <h1>✈️ Aerolínea Tycoon</h1>
 
 <div class="panel">
-<p>💰 Dinero: $<span id="dinero"></span></p>
-<p>✈️ Aviones: <span id="aviones"></span></p>
-<p>👨‍✈️ Pilotos: <span id="pilotos"></span></p>
-<p>😊 Satisfacción: <span id="satisfaccion"></span>%</p>
+  <div class="stats-row">
+    <p>💰 Dinero: $<span id="dinero"></span></p>
+    <p>✈️ Aviones: <span id="aviones"></span></p>
+    <p>👨‍✈️ Pilotos: <span id="pilotos"></span></p>
+  </div>
+  <div class="stats-row">
+    <p>😊 Satisfacción: <span id="satisfaccion"></span>%</p>
+    <p>⛽ Combustible: <span id="combustible"></span>%</p>
+    <p>🔧 Mantenimiento: <span id="mantenimiento"></span>%</p>
+  </div>
+  <div class="stats-row">
+    <p>🏆 Nivel: <span id="nivel"></span></p>
+    <p>⭐ XP: <span id="xp"></span></p>
+  </div>
 </div>
 
 <canvas id="mapa" width="360" height="220"></canvas>
 
 <div class="panel">
-<p>🛫 Ruta: <span id="rutaTxt">Selecciona dos ciudades</span></p>
-<button onclick="volar()">Volar</button>
-<button onclick="comprarAvion()">Comprar avión ($500)</button>
-<button onclick="contratarPiloto()">Contratar piloto ($300)</button><br>
-<button onclick="guardar()">💾 Guardar</button>
-<button onclick="cargar()">📂 Cargar</button>
+  <p>🛫 Ruta: <span id="rutaTxt">Selecciona dos ciudades</span></p>
+  <button onclick="volar()">Volar</button>
+  <button onclick="comprarAvion()">Comprar avión ($500)</button>
+  <button onclick="contratarPiloto()">Contratar piloto ($300)</button><br>
+  <button onclick="repostar()">⛽ Repostar ($200)</button>
+  <button onclick="reparar()">🔧 Reparar ($400)</button><br>
+  <button onclick="guardar()">💾 Guardar</button>
+  <button onclick="cargar()">📂 Cargar</button>
 </div>
 
 <p id="log" class="small"></p>
 
+<div id="overlayGameOver">
+  <div>
+    <h2>💥 Tu aerolínea ha quebrado</h2>
+    <p id="motivoGameOver"></p>
+    <button onclick="reiniciar()">Reiniciar partida</button>
+  </div>
+</div>
+
 <script>
 let dinero=2000,aviones=1,pilotos=1,satisfaccion=80;
+let combustible=100,mantenimiento=100;
+let nivel=1,xp=0;
+
 const canvas=document.getElementById("mapa");
 const ctx=canvas.getContext("2d");
 const ciudades=[
- {n:"México",x:80,y:110},
- {n:"Nueva York",x:120,y:70},
- {n:"Madrid",x:200,y:80},
- {n:"São Paulo",x:150,y:160},
- {n:"Tokio",x:300,y:90}
+ {n:"México",x:80,y:110,demanda:1.2},
+ {n:"Nueva York",x:120,y:70,demanda:1.5},
+ {n:"Madrid",x:200,y:80,demanda:1.1},
+ {n:"São Paulo",x:150,y:160,demanda:1.3},
+ {n:"Tokio",x:300,y:90,demanda:1.8}
 ];
 let origen=null,destino=null;
+
+const dineroSpan=document.getElementById("dinero");
+const avionesSpan=document.getElementById("aviones");
+const pilotosSpan=document.getElementById("pilotos");
+const satisfaccionSpan=document.getElementById("satisfaccion");
+const combustibleSpan=document.getElementById("combustible");
+const mantenimientoSpan=document.getElementById("mantenimiento");
+const nivelSpan=document.getElementById("nivel");
+const xpSpan=document.getElementById("xp");
+const rutaTxt=document.getElementById("rutaTxt");
+const logP=document.getElementById("log");
+const overlayGameOver=document.getElementById("overlayGameOver");
+const motivoGameOver=document.getElementById("motivoGameOver");
 
 function dibujar(){
  ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -58,6 +103,8 @@ function dibujar(){
   ctx.arc(c.x,c.y,6,0,Math.PI*2);
   ctx.fillStyle=(c===origen)?"green":(c===destino)?"red":"#003366";
   ctx.fill();
+  ctx.fillStyle="#000";
+  ctx.font="11px Arial";
   ctx.fillText(c.n,c.x+8,c.y+4);
  });
  if(origen&&destino){
@@ -85,28 +132,168 @@ canvas.addEventListener("click",e=>{
 });
 
 function volar(){
+ if(estaGameOver())return;
  if(!origen||!destino)return log("❌ Selecciona dos ciudades");
- let g=Math.floor(Math.hypot(origen.x-destino.x,origen.y-destino.y)*5*(satisfaccion/100));
- dinero+=g;satisfaccion-=2;
- log(`🛫 ${origen.n} → ${destino.n} +$${g}`);
+ if(pilotos<1||aviones<1)return log("❌ Necesitas al menos 1 avión y 1 piloto");
+ if(combustible<10)return log("⛽ No hay combustible suficiente");
+ if(mantenimiento<15)return log("🔧 El avión está en muy mal estado");
+
+ let distancia=Math.hypot(origen.x-destino.x,origen.y-destino.y);
+ let base=Math.floor(distancia*5*(satisfaccion/100)*destino.demanda);
+ let ganancia=base;
+
+ // consumo de combustible
+ let consumo=Math.floor(Math.random()*10)+5; // 5–14
+ combustible=Math.max(0,combustible-consumo);
+
+ // desgaste de mantenimiento
+ let desgaste=Math.floor(Math.random()*5)+2; // 2–6
+ mantenimiento=Math.max(0,mantenimiento-desgaste);
+
+ // eventos aleatorios
+ let evento=Math.random();
+ if(evento<0.15){
+   let multa=100;
+   dinero-=multa;
+   satisfaccion=Math.max(0,satisfaccion-5);
+   log(`⚠️ Retraso por tormenta. Multa: $${multa}`);
+ }else if(evento<0.30){
+   let bonus=150;
+   dinero+=bonus;
+   satisfaccion=Math.min(100,satisfaccion+3);
+   log(`🎉 Pasajeros felices. Bonus: $${bonus}`);
+ }else{
+   log(`🛫 ${origen.n} → ${destino.n} +$${ganancia}`);
+ }
+
+ dinero+=ganancia;
+ satisfaccion=Math.max(0,satisfaccion-2);
+
+ // XP y nivel
+ let xpGanada=Math.floor(ganancia/10);
+ xp+=xpGanada;
+ if(xp>=nivel*100){
+   nivel++;
+   xp=0;
+   satisfaccion=Math.min(100,satisfaccion+5);
+   log(`🏆 ¡Has subido a nivel ${nivel}!`);
+ }
+
+ actualizar();
+ comprobarGameOver();
+}
+
+function comprarAvion(){
+ if(estaGameOver())return;
+ if(dinero>=500){
+   dinero-=500;
+   aviones++;
+   log("✈️ Avión comprado");
+ }else log("❌ No tienes suficiente dinero");
  actualizar();
 }
 
-function comprarAvion(){if(dinero>=500){dinero-=500;aviones++;log("✈️ Avión comprado");}actualizar();}
-function contratarPiloto(){if(dinero>=300){dinero-=300;pilotos++;log("👨‍✈️ Piloto contratado");}actualizar();}
-function guardar(){localStorage.setItem("aero",JSON.stringify({dinero,aviones,pilotos,satisfaccion}));log("💾 Guardado");}
-function cargar(){let d=JSON.parse(localStorage.getItem("aero"));if(d){dinero=d.dinero;aviones=d.aviones;pilotos=d.pilotos;satisfaccion=d.satisfaccion;}actualizar();}
-function actualizar(){dineroSpan.textContent=dinero;avionesSpan.textContent=aviones;pilotosSpan.textContent=pilotos;satisfaccionSpan.textContent=Math.floor(satisfaccion);}
+function contratarPiloto(){
+ if(estaGameOver())return;
+ if(dinero>=300){
+   dinero-=300;
+   pilotos++;
+   log("👨‍✈️ Piloto contratado");
+ }else log("❌ No tienes suficiente dinero");
+ actualizar();
+}
+
+function repostar(){
+ if(estaGameOver())return;
+ if(dinero>=200){
+   dinero-=200;
+   combustible=100;
+   log("⛽ Avión repostado");
+ }else log("❌ No tienes suficiente dinero para repostar");
+ actualizar();
+}
+
+function reparar(){
+ if(estaGameOver())return;
+ if(dinero>=400){
+   dinero-=400;
+   mantenimiento=100;
+   log("🔧 Avión reparado");
+ }else log("❌ No tienes suficiente dinero para reparar");
+ actualizar();
+}
+
+function guardar(){
+ if(estaGameOver())return;
+ const datos={dinero,aviones,pilotos,satisfaccion,combustible,mantenimiento,nivel,xp};
+ localStorage.setItem("aero_mejorado",JSON.stringify(datos));
+ log("💾 Partida guardada");
+}
+
+function cargar(){
+ const d=JSON.parse(localStorage.getItem("aero_mejorado"));
+ if(d){
+   dinero=d.dinero;
+   aviones=d.aviones;
+   pilotos=d.pilotos;
+   satisfaccion=d.satisfaccion;
+   combustible=d.combustible;
+   mantenimiento=d.mantenimiento;
+   nivel=d.nivel;
+   xp=d.xp;
+   log("📂 Partida cargada");
+   actualizar();
+   comprobarGameOver();
+ }else{
+   log("❌ No hay partida guardada");
+ }
+}
+
+function actualizar(){
+ dineroSpan.textContent=dinero;
+ avionesSpan.textContent=aviones;
+ pilotosSpan.textContent=pilotos;
+ satisfaccionSpan.textContent=Math.floor(satisfaccion);
+ combustibleSpan.textContent=Math.floor(combustible);
+ mantenimientoSpan.textContent=Math.floor(mantenimiento);
+ nivelSpan.textContent=nivel;
+ xpSpan.textContent=xp+"/"+(nivel*100);
+}
+
 function log(t){logP.textContent=t;}
 
-const dineroSpan=document.getElementById("dinero");
-const avionesSpan=document.getElementById("aviones");
-const pilotosSpan=document.getElementById("pilotos");
-const satisfaccionSpan=document.getElementById("satisfaccion");
-const rutaTxt=document.getElementById("rutaTxt");
-const logP=document.getElementById("log");
+function comprobarGameOver(){
+ if(dinero<0){
+   mostrarGameOver("Te has quedado sin dinero.");
+ }else if(satisfaccion<=5){
+   mostrarGameOver("La satisfacción de los pasajeros es demasiado baja.");
+ }else if(mantenimiento<=5){
+   mostrarGameOver("El avión está inservible por falta de mantenimiento.");
+ }
+}
 
-dibujar();actualizar();
+function mostrarGameOver(motivo){
+ overlayGameOver.style.display="flex";
+ motivoGameOver.textContent=motivo;
+}
+
+function estaGameOver(){
+ return overlayGameOver.style.display==="flex";
+}
+
+function reiniciar(){
+ dinero=2000;aviones=1;pilotos=1;satisfaccion=80;
+ combustible=100;mantenimiento=100;nivel=1;xp=0;
+ origen=null;destino=null;
+ rutaTxt.textContent="Selecciona dos ciudades";
+ overlayGameOver.style.display="none";
+ log("🔁 Nueva partida iniciada");
+ actualizar();
+ dibujar();
+}
+
+dibujar();
+actualizar();
 </script>
 
 </body>
